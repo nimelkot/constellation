@@ -9,8 +9,11 @@ python -m pip install -e .
 constellation run "Investigate the flaky test" --interactive
 constellation stars
 constellation orbit --resume <node-id>
+constellation orbit --from <parent-id> --title "Test hypothesis" --prompt "Run focused checks"
 ```
 
 The default database is `.constellation/state.db`. Set `CONSTELLATION_DB` to use another location.
 
 `forest` and `branch --resume` remain available as hidden compatibility aliases.
+
+Use `orbit --from` to create a sub-mission under an existing node. The star map renders child missions with `├─` and `└─` connectors, plus `│` guides for deeper levels.

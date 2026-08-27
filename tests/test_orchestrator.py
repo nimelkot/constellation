@@ -14,7 +14,7 @@ def test_fork_and_persist(tmp_path):
     second = Orchestrator(database)
     assert [node.title for node in second.list_nodes()] == ["Root", "Tests"]
     assert second.get_node(child.id).state == "completed"
-    assert second.tree_lines()[1][1] == "    `-- "
+    assert second.tree_lines()[1][1] == "   └─ "
 
 
 def test_invalid_state_is_rejected(tmp_path):

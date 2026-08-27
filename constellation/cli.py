@@ -47,17 +47,30 @@ def forest_alias() -> None:
 
 
 @app.command("orbit")
-def orbit(resume: str = typer.Option(..., "--resume", help="Mission node id to resume.")) -> None:
-    """Resume a parked or waiting mission node."""
+def orbit(
+    resume: str | None = typer.Option(None, "--resume", help="Mission node id to resume."),
+    parent: str | None = typer.Option(None, "--from", help="Parent node id for a sub-mission."),
+    title: str | None = typer.Option(None, "--title", help="Sub-mission title."),
+    prompt: str | None = typer.Option(None, "--prompt", help="Sub-mission prompt."),
+) -> None:
+    """Resume a node or create a sub-mission in its orbit."""
     orchestrator = open_orchestrator()
-    node = orchestrator.set_state(resume, "running", "Branch resumed")
+    if parent:
+        if not title or not prompt:
+            raise typer.BadParameter("--from requires both --title and --prompt")
+        node = orchestrator.fork(parent, title, prompt)
+        typer.echo(f"Created sub-mission {node.id}: {node.title}")
+        return
+    if not resume:
+        raise typer.BadParameter("Provide --resume or --from")
+    node = orchestrator.set_state(resume, "running", "Mission resumed")
     typer.echo(f"Resumed {node.id}: {node.title}")
 
 
 @app.command("branch", hidden=True)
 def branch_alias(resume: str = typer.Option(..., "--resume", help="Mission node id to resume.")) -> None:
     """Legacy alias for orbit."""
-    orbit(resume)
+    orbit(resume=resume)
 
 
 @app.command()

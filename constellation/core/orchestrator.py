@@ -149,8 +149,8 @@ class Orchestrator:
             siblings = children.get(parent, [])
             for index, node in enumerate(siblings):
                 last = index == len(siblings) - 1
-                result.append((node, prefix + ("`-- " if last else "|-- ")))
-                visit(node.id, prefix + ("    " if last else "|   "))
+                result.append((node, prefix + ("└─ " if last else "├─ ")))
+                visit(node.id, prefix + ("   " if last else "│  "))
         visit(None)
         return result
 
