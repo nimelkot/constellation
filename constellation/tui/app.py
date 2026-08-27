@@ -40,9 +40,9 @@ class ConstellationApp(App[None]):
                 yield Static(id="stats", classes="title")
                 yield ListView(id="tree")
             with Vertical(id="detail-pane"):
-                yield Static("EVENT STREAM", classes="title")
-                yield Static("Select a branch to inspect its causal chain.", id="detail")
-        yield Static("forest  run  attach/branch  next/flow  search  mcp status", id="commands")
+                yield Static("SIGNAL STREAM", classes="title")
+                yield Static("Select a mission node to inspect its causal chain.", id="detail")
+            yield Static("stars  run  orbit  next/flow  search  mcp status", id="commands")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -55,7 +55,7 @@ class ConstellationApp(App[None]):
         nodes = self.orchestrator.list_nodes()
         active = sum(node.state == "running" for node in nodes)
         self.query_one("#stats", Static).update(
-            f"✦ CONSTELLATION / FOREST    active {active}  nodes {len(nodes)}  mcp 0"
+            f"✦ CONSTELLATION / STAR MAP    active {active}  nodes {len(nodes)}  mcp 0"
         )
         tree = self.query_one("#tree", ListView)
         selected = tree.index
@@ -80,7 +80,7 @@ class ConstellationApp(App[None]):
         node = self.orchestrator.get_node(node_id)
         if node is None:
             return
-        lines = [f"[{node.state.upper()}] {node.title}", f"prompt: {node.prompt}", "", "EVENTS"]
+        lines = [f"[{node.state.upper()}] {node.title}", f"mission: {node.prompt}", "", "SIGNALS"]
         lines.extend(f"{event.created_at}  {event.message}" for event in self.orchestrator.events_for(node.id))
         self.query_one("#detail", Static).update("\n".join(lines))
 

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 
 import typer
 
@@ -19,7 +18,7 @@ def open_orchestrator() -> Orchestrator:
 
 @app.command()
 def run(prompt: str, interactive: bool = typer.Option(False, "--interactive", "-i")) -> None:
-    """Create a root agent branch and optionally open the forest."""
+    """Launch a mission and optionally open the star map."""
     orchestrator = open_orchestrator()
     node = orchestrator.create_node(prompt[:48], prompt)
     orchestrator.set_state(node.id, "running", "Agent branch started")
@@ -28,19 +27,31 @@ def run(prompt: str, interactive: bool = typer.Option(False, "--interactive", "-
         ConstellationApp(orchestrator).run()
 
 
-@app.command()
-def forest() -> None:
-    """Launch the interactive dependency forest."""
+@app.command("stars")
+def stars() -> None:
+    """Launch the interactive Constellation star map."""
     orchestrator = open_orchestrator()
     ConstellationApp(orchestrator).run()
 
 
-@app.command()
-def branch(resume: str = typer.Option(..., "--resume", help="Branch id to resume.")) -> None:
-    """Resume a parked or waiting branch."""
+@app.command("forest", hidden=True)
+def forest_alias() -> None:
+    """Legacy alias for stars."""
+    stars()
+
+
+@app.command("orbit")
+def orbit(resume: str = typer.Option(..., "--resume", help="Mission node id to resume.")) -> None:
+    """Resume a parked or waiting mission node."""
     orchestrator = open_orchestrator()
     node = orchestrator.set_state(resume, "running", "Branch resumed")
     typer.echo(f"Resumed {node.id}: {node.title}")
+
+
+@app.command("branch", hidden=True)
+def branch_alias(resume: str = typer.Option(..., "--resume", help="Mission node id to resume.")) -> None:
+    """Legacy alias for orbit."""
+    orbit(resume)
 
 
 @app.command("mcp")

@@ -7,8 +7,10 @@ Constellation is a local-first terminal workspace for exploring concurrent agent
 ```console
 python -m pip install -e .
 constellation run "Investigate the flaky test" --interactive
-constellation forest
-constellation branch --resume <node-id>
+constellation stars
+constellation orbit --resume <node-id>
 ```
 
 The default database is `.constellation/state.db`. Set `CONSTELLATION_DB` to use another location.
+
+`forest` and `branch --resume` remain available as hidden compatibility aliases.
