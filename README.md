@@ -23,3 +23,5 @@ The default database is `.constellation/state.db`. Set `CONSTELLATION_DB` to use
 Use `orbit --from` to create a sub-mission under an existing node. The star map renders child missions with `├─` and `└─` connectors, plus `│` guides for deeper levels.
 
 The selected node's detail panel shows its ID. In the UI, `s` opens a confirmation before stopping and parking the selected mission, `d` opens a confirmation before deleting its entire sub-mission tree, and `Ctrl+P` opens the command palette. The visible hint is the single `palette` label at the right of the footer. API keys are stored as hashes in `.constellation/api_keys.json`; the generated secret is printed only once.
+
+Use the `✦ Constellation view` button in the left pane to switch from the dependency tree to a literal star view. Each mission appears as a clickable star with the first few words of its prompt underneath; selecting a star opens the same mission details and signal stream.
