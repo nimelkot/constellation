@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import threading
+
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Footer, Header, Label, ListItem, ListView, Static
@@ -34,7 +36,8 @@ class ConstellationApp(App[None]):
     def __init__(self, orchestrator: Orchestrator, **kwargs) -> None:
         super().__init__(**kwargs)
         self.orchestrator = orchestrator
-        self.orchestrator.subscribe(lambda _: self.call_from_thread(self.refresh_view))
+        self._ui_thread: threading.Thread | None = None
+        self.orchestrator.subscribe(self._on_orchestrator_event)
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -49,7 +52,14 @@ class ConstellationApp(App[None]):
         yield Footer()
 
     def on_mount(self) -> None:
+        self._ui_thread = threading.current_thread()
         self.refresh_view()
+
+    def _on_orchestrator_event(self, _event) -> None:
+        if threading.current_thread() is self._ui_thread:
+            self.refresh_view()
+        else:
+            self.call_from_thread(self.refresh_view)
 
     def action_refresh(self) -> None:
         self.refresh_view()

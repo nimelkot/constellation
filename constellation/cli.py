@@ -7,6 +7,7 @@ import os
 import typer
 
 from constellation.core.orchestrator import Orchestrator
+from constellation.core.demo import demo_worker
 from constellation.tui.app import ConstellationApp
 
 app = typer.Typer(help="Explore and orchestrate concurrent agent branches.")
@@ -21,10 +22,15 @@ def run(prompt: str, interactive: bool = typer.Option(False, "--interactive", "-
     """Launch a mission and optionally open the star map."""
     orchestrator = open_orchestrator()
     node = orchestrator.create_node(prompt[:48], prompt)
-    orchestrator.set_state(node.id, "running", "Agent branch started")
     typer.echo(f"Created branch {node.id}: {node.title}")
     if interactive:
-        ConstellationApp(orchestrator).run()
+        interface = ConstellationApp(orchestrator)
+        orchestrator.start(node.id, demo_worker)
+        interface.run()
+    else:
+        worker = orchestrator.start(node.id, demo_worker)
+        worker.join()
+        typer.echo(f"Mission {node.id} completed")
 
 
 @app.command("stars")
@@ -52,6 +58,18 @@ def orbit(resume: str = typer.Option(..., "--resume", help="Mission node id to r
 def branch_alias(resume: str = typer.Option(..., "--resume", help="Mission node id to resume.")) -> None:
     """Legacy alias for orbit."""
     orbit(resume)
+
+
+@app.command()
+def status() -> None:
+    """Show saved mission nodes and their current states."""
+    orchestrator = open_orchestrator()
+    nodes = orchestrator.list_nodes()
+    if not nodes:
+        typer.echo("No missions recorded.")
+        return
+    for node in nodes:
+        typer.echo(f"{node.id}  {node.state:<12}  {node.title}")
 
 
 @app.command("mcp")

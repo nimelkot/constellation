@@ -1,4 +1,6 @@
 from constellation.core.orchestrator import Orchestrator
+from constellation.core.demo import demo_worker
+from constellation.tui.app import ConstellationApp
 
 
 def test_fork_and_persist(tmp_path):
@@ -35,3 +37,31 @@ def test_background_worker_streams_and_completes(tmp_path):
     assert [event.message for event in orchestrator.events_for(node.id)][-3:] == [
         "step one", "step two", "Background execution completed"
     ]
+
+
+def test_demo_worker_produces_mission_signals(tmp_path):
+    orchestrator = Orchestrator(tmp_path / "state.db")
+    node = orchestrator.create_node("Demo", "Inspect the repository")
+    thread = orchestrator.start(node.id, demo_worker)
+    thread.join(timeout=4)
+    assert orchestrator.get_node(node.id).state == "completed"
+    events = orchestrator.events_for(node.id)
+    assert len(events) == 7
+    assert events[1].message == "Background execution started"
+    assert events[-1].message == "Background execution completed"
+
+
+def test_ui_receives_live_worker_signals(tmp_path):
+    import asyncio
+
+    async def check():
+        orchestrator = Orchestrator(tmp_path / "ui.db")
+        node = orchestrator.create_node("UI", "Watch signals")
+        async with ConstellationApp(orchestrator).run_test() as pilot:
+            thread = orchestrator.start(node.id, lambda _: ["live signal"])
+            await asyncio.to_thread(thread.join, 2)
+            await pilot.pause()
+            assert "Background execution completed" in str(pilot.app.query_one("#detail").render())
+        orchestrator.close()
+
+    asyncio.run(check())
