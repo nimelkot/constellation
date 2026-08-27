@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "constellation-orchestrator"
+version = "0.1.0"
+description = "A star-themed terminal agent orchestrator."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "textual>=0.50",
+  "typer>=0.12",
+  "rich>=13.7",
+]
+
+[project.scripts]
+constellation = "constellation.cli:app"
+
+[tool.setuptools.packages.find]
+include = ["constellation*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
