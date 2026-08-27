@@ -14,6 +14,8 @@ from constellation.core.orchestrator import AgentNode, Orchestrator
 
 
 class ConfirmScreen(ModalScreen[bool]):
+    BINDINGS = [("y", "confirm_yes", "Yes"), ("n", "confirm_no", "No")]
+
     CSS = """
     ConfirmScreen { align: center middle; background: rgba(8, 6, 20, 0.72); }
     #confirm-box { width: 58; height: auto; background: #211d3d; border: thick #877BCA; padding: 2 3; }
@@ -37,6 +39,12 @@ class ConfirmScreen(ModalScreen[bool]):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         self.dismiss(event.button.id == "confirm-yes")
+
+    def action_confirm_yes(self) -> None:
+        self.dismiss(True)
+
+    def action_confirm_no(self) -> None:
+        self.dismiss(False)
 
 
 class ConstellationApp(App[None]):
