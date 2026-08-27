@@ -67,7 +67,11 @@ def test_ui_receives_live_worker_signals(tmp_path):
                 (binding.key if hasattr(binding, "key") else binding[0]) == "ctrl+p"
                 for binding in pilot.app.BINDINGS
             )
-            assert str(pilot.app.query_one("#commands").render()) == "palette"
+            assert any(
+                binding.description == "palette"
+                for binding in pilot.app.BINDINGS
+                if hasattr(binding, "description")
+            )
             assert "Background execution completed" in str(pilot.app.query_one("#detail").render())
         orchestrator.close()
 

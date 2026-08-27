@@ -58,7 +58,6 @@ class ConstellationApp(App[None]):
     ListItem { padding: 0 1; color: #bcb7d2; }
     ListItem.--highlight { background: #302b55; color: #ffffff; }
     .title { color: #a69be6; text-style: bold; }
-    #commands { dock: bottom; width: 1fr; height: 1; background: #211d3d; color: #aaa4c4; padding: 0 2; content-align: right middle; }
     #detail { height: 1fr; overflow-y: auto; }
     .running { color: #b7a9ff; }
     .completed { color: #77718f; }
@@ -71,7 +70,7 @@ class ConstellationApp(App[None]):
         ("r", "refresh", "Refresh"),
         ("s", "stop_selected", "Stop"),
         ("d", "delete_selected", "Delete"),
-        Binding("ctrl+p", "command_palette", "p", show=False),
+        Binding("ctrl+p", "command_palette", "palette"),
         ("q", "quit", "Quit"),
     ]
 
@@ -91,7 +90,6 @@ class ConstellationApp(App[None]):
             with Vertical(id="detail-pane"):
                 yield Static("SIGNAL STREAM", classes="title")
                 yield Static("Select a mission node to inspect its causal chain.", id="detail")
-                yield Static("palette", id="commands")
         yield Footer()
 
     def on_mount(self) -> None:
