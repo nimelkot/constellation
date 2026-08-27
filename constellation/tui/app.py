@@ -11,20 +11,23 @@ from constellation.core.orchestrator import AgentNode, Orchestrator
 
 class ConstellationApp(App[None]):
     CSS = """
-    Screen { background: #081018; color: #d8e8ed; }
-    Header { background: #102a35; color: #7fe9df; }
+    Screen { background: #0a1020; color: #dce7f3; }
+    Header { background: #101b31; color: #79e2d0; }
     #body { height: 1fr; }
-    #tree-pane { width: 42%; border: solid #24525a; padding: 1; }
-    #detail-pane { width: 58%; border: solid #24525a; padding: 1 2; }
-    #tree { height: 1fr; }
-    ListItem { padding: 0 1; }
-    ListItem.--highlight { background: #17484c; color: #ffffff; }
+    #tree-pane { width: 42%; background: #0e1729; border: solid #27415a; padding: 1; }
+    #detail-pane { width: 58%; background: #0c1424; border: solid #27415a; padding: 1 2; }
+    #tree { height: 1fr; scrollbar-color: #355878; }
+    ListItem { padding: 0 1; color: #a9bed2; }
+    ListItem.--highlight { background: #17364a; color: #ffffff; }
+    .title { color: #79e2d0; text-style: bold; }
+    #commands { height: 1; background: #16243b; color: #91a9c2; padding: 0 2; }
     #detail { height: 1fr; overflow-y: auto; }
-    .running { color: #63e6be; }
-    .completed { color: #6e858b; }
-    .needs-input { color: #ffd166; }
-    .parked { color: #8aa0aa; }
-    Footer { background: #102a35; }
+    .running { color: #79e2d0; }
+    .completed { color: #71869d; }
+    .needs-input { color: #f6c85f; }
+    .parked { color: #91a9c2; }
+    .failed { color: #ff8b7b; }
+    Footer { background: #101b31; color: #a9bed2; }
     """
     BINDINGS = [("r", "refresh", "Refresh"), ("q", "quit", "Quit")]
 
