@@ -5,10 +5,38 @@ from __future__ import annotations
 import threading
 
 from textual.app import App, ComposeResult
+from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Footer, Header, Label, ListItem, ListView, Static
+from textual.screen import ModalScreen
+from textual.widgets import Button, Footer, Header, Label, ListItem, ListView, Static
 
 from constellation.core.orchestrator import AgentNode, Orchestrator
+
+
+class ConfirmScreen(ModalScreen[bool]):
+    CSS = """
+    ConfirmScreen { align: center middle; background: rgba(8, 6, 20, 0.72); }
+    #confirm-box { width: 58; height: auto; background: #211d3d; border: thick #877BCA; padding: 2 3; }
+    #confirm-message { margin-bottom: 1; color: #ebe8f5; }
+    #confirm-actions { height: 3; align: center middle; }
+    #confirm-actions Button { margin: 0 1; }
+    #confirm-yes { background: #877BCA; color: #0e0d1c; }
+    #confirm-no { background: #3c3764; color: #ebe8f5; }
+    """
+
+    def __init__(self, message: str) -> None:
+        super().__init__()
+        self.message = message
+
+    def compose(self) -> ComposeResult:
+        with Vertical(id="confirm-box"):
+            yield Label(self.message, id="confirm-message")
+            with Horizontal(id="confirm-actions"):
+                yield Button("Yes", id="confirm-yes", variant="primary")
+                yield Button("No", id="confirm-no")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        self.dismiss(event.button.id == "confirm-yes")
 
 
 class ConstellationApp(App[None]):
@@ -22,7 +50,7 @@ class ConstellationApp(App[None]):
     ListItem { padding: 0 1; color: #bcb7d2; }
     ListItem.--highlight { background: #302b55; color: #ffffff; }
     .title { color: #a69be6; text-style: bold; }
-    #commands { height: 1; background: #211d3d; color: #aaa4c4; padding: 0 2; }
+    #commands { dock: bottom; width: 1fr; height: 1; background: #211d3d; color: #aaa4c4; padding: 0 2; content-align: right middle; }
     #detail { height: 1fr; overflow-y: auto; }
     .running { color: #b7a9ff; }
     .completed { color: #77718f; }
@@ -35,7 +63,7 @@ class ConstellationApp(App[None]):
         ("r", "refresh", "Refresh"),
         ("s", "stop_selected", "Stop"),
         ("d", "delete_selected", "Delete"),
-        ("ctrl+p", "command_palette", "Palette"),
+        Binding("ctrl+p", "command_palette", "p", show=False),
         ("q", "quit", "Quit"),
     ]
 
@@ -55,12 +83,13 @@ class ConstellationApp(App[None]):
             with Vertical(id="detail-pane"):
                 yield Static("SIGNAL STREAM", classes="title")
                 yield Static("Select a mission node to inspect its causal chain.", id="detail")
-            yield Static("stars  run  orbit  stop  delete  search  mcp status", id="commands")
+                yield Static("p", id="commands")
         yield Footer()
 
     def on_mount(self) -> None:
         self._ui_thread = threading.current_thread()
         self.refresh_view()
+        self.query_one("#tree", ListView).focus()
 
     def _on_orchestrator_event(self, _event) -> None:
         if threading.current_thread() is self._ui_thread:
@@ -113,18 +142,35 @@ class ConstellationApp(App[None]):
         self.query_one("#detail", Static).update("\n".join(lines))
 
     def _selected_node_id(self) -> str | None:
-        item = self.query_one("#tree", ListView).highlighted_child
+        tree = self.query_one("#tree", ListView)
+        item = tree.highlighted_child
+        if item is None and tree.index is not None and tree.children:
+            item = tree.children[tree.index]
         return item.name if item else None
 
     def action_stop_selected(self) -> None:
         node_id = self._selected_node_id()
         if node_id:
-            self.orchestrator.stop(node_id)
-            self.notify(f"Stopped mission {node_id}")
+            self.push_screen(
+                ConfirmScreen(f"Stop mission {node_id}?"),
+                lambda confirmed: self._stop_confirmed(node_id, confirmed),
+            )
 
     def action_delete_selected(self) -> None:
         node_id = self._selected_node_id()
         if node_id:
+            self.push_screen(
+                ConfirmScreen(f"Delete mission subtree {node_id}?"),
+                lambda confirmed: self._delete_confirmed(node_id, confirmed),
+            )
+
+    def _stop_confirmed(self, node_id: str, confirmed: bool) -> None:
+        if confirmed:
+            self.orchestrator.stop(node_id)
+            self.notify(f"Stopped mission {node_id}")
+
+    def _delete_confirmed(self, node_id: str, confirmed: bool) -> None:
+        if confirmed:
             self.orchestrator.delete(node_id)
             self.notify(f"Deleted mission subtree {node_id}")
             self.refresh_view()

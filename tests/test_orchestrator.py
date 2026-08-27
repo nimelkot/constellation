@@ -63,8 +63,32 @@ def test_ui_receives_live_worker_signals(tmp_path):
             await asyncio.to_thread(thread.join, 2)
             await pilot.pause()
             assert pilot.app.title == "Constellation"
-            assert any(binding[0] == "ctrl+p" for binding in pilot.app.BINDINGS)
+            assert any(
+                (binding.key if hasattr(binding, "key") else binding[0]) == "ctrl+p"
+                for binding in pilot.app.BINDINGS
+            )
+            assert str(pilot.app.query_one("#commands").render()) == "p"
             assert "Background execution completed" in str(pilot.app.query_one("#detail").render())
+        orchestrator.close()
+
+    asyncio.run(check())
+
+
+def test_ui_requires_confirmation_before_stopping(tmp_path):
+    import asyncio
+
+    async def check():
+        orchestrator = Orchestrator(tmp_path / "confirm.db")
+        node = orchestrator.create_node("UI", "Keep this mission")
+        orchestrator.set_state(node.id, "running")
+        async with ConstellationApp(orchestrator).run_test() as pilot:
+            await pilot.press("s")
+            await pilot.pause()
+            assert pilot.app.screen.query_one("#confirm-yes").label == "Yes"
+            assert pilot.app.screen.query_one("#confirm-no").label == "No"
+            await pilot.press("n")
+            await pilot.pause()
+            assert orchestrator.get_node(node.id).state == "running"
         orchestrator.close()
 
     asyncio.run(check())
