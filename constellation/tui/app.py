@@ -56,8 +56,11 @@ class ConstellationApp(App[None]):
     #tree { height: 1fr; scrollbar-color: #5b5490; }
     #view-toggle { width: 1fr; margin: 1 0; background: #302b55; color: #ebe8f5; }
     ListItem { padding: 0 1; color: #bcb7d2; }
-    #tree.constellation-view ListItem { height: 4; layout: vertical; align: center middle; }
-    #tree.constellation-view Button { width: 7; height: 1; min-width: 7; padding: 0; color: #b7a9ff; background: transparent; border: none; }
+    #tree.constellation-view { layout: grid; grid-size: 2; grid-gutter: 1 2; padding: 1; }
+    #tree.constellation-view ListItem { height: 7; layout: vertical; align: center middle; background: #17152a; border: solid #302b55; padding: 1; }
+    #tree.constellation-view ListItem.--highlight { background: #302b55; border: solid #877BCA; }
+    #tree.constellation-view Button { width: 9; height: 2; min-width: 9; padding: 0; color: #b7a9ff; background: transparent; border: none; text-style: bold; }
+    #tree.constellation-view .star-title { color: #ebe8f5; text-align: center; text-style: bold; }
     #tree.constellation-view .star-summary { color: #aaa4c4; text-align: center; }
     ListItem.--highlight { background: #302b55; color: #ffffff; }
     .title { color: #a69be6; text-style: bold; }
@@ -137,6 +140,7 @@ class ConstellationApp(App[None]):
                 tree.mount(
                     ListItem(
                         Button("✦", id=f"star-{node.id}"),
+                        Static(node.title, classes="star-title"),
                         Static(summary or node.title, classes="star-summary"),
                         name=node.id,
                         classes=node.state,
