@@ -10,6 +10,10 @@ constellation run "Investigate the flaky test" --interactive
 constellation stars
 constellation orbit --resume <node-id>
 constellation orbit --from <parent-id> --title "Test hypothesis" --prompt "Run focused checks"
+constellation status
+constellation stop <node-id>
+constellation delete <node-id> --yes
+constellation api-key create --label "local development"
 ```
 
 The default database is `.constellation/state.db`. Set `CONSTELLATION_DB` to use another location.
@@ -17,3 +21,5 @@ The default database is `.constellation/state.db`. Set `CONSTELLATION_DB` to use
 `forest` and `branch --resume` remain available as hidden compatibility aliases.
 
 Use `orbit --from` to create a sub-mission under an existing node. The star map renders child missions with `├─` and `└─` connectors, plus `│` guides for deeper levels.
+
+The selected node's detail panel shows its ID. In the UI, `s` stops and parks the selected mission, `d` deletes its entire sub-mission tree, and `Ctrl+P` opens the command palette. API keys are stored as hashes in `.constellation/api_keys.json`; the generated secret is printed only once.

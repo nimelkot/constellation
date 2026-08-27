@@ -1,5 +1,6 @@
 from constellation.core.orchestrator import Orchestrator
 from constellation.core.demo import demo_worker
+from constellation.core.auth import APIKeyStore
 from constellation.tui.app import ConstellationApp
 
 
@@ -61,7 +62,27 @@ def test_ui_receives_live_worker_signals(tmp_path):
             thread = orchestrator.start(node.id, lambda _: ["live signal"])
             await asyncio.to_thread(thread.join, 2)
             await pilot.pause()
+            assert pilot.app.title == "Constellation"
+            assert any(binding[0] == "ctrl+p" for binding in pilot.app.BINDINGS)
             assert "Background execution completed" in str(pilot.app.query_one("#detail").render())
         orchestrator.close()
 
     asyncio.run(check())
+
+
+def test_api_key_is_returned_once_and_stored_as_hash(tmp_path):
+    store = APIKeyStore(tmp_path / "keys.json")
+    token = store.create("local")
+    contents = (tmp_path / "keys.json").read_text()
+    assert token.startswith("cst_")
+    assert token not in contents
+    assert '"label": "local"' in contents
+
+
+def test_delete_removes_a_subtree(tmp_path):
+    orchestrator = Orchestrator(tmp_path / "state.db")
+    root = orchestrator.create_node("Root", "Prompt")
+    child = orchestrator.fork(root.id, "Child", "Prompt")
+    orchestrator.fork(child.id, "Grandchild", "Prompt")
+    orchestrator.delete(root.id)
+    assert orchestrator.list_nodes() == []

@@ -31,10 +31,17 @@ class ConstellationApp(App[None]):
     .failed { color: #ff8b7b; }
     Footer { background: #1b1830; color: #bcb7d2; }
     """
-    BINDINGS = [("r", "refresh", "Refresh"), ("q", "quit", "Quit")]
+    BINDINGS = [
+        ("r", "refresh", "Refresh"),
+        ("s", "stop_selected", "Stop"),
+        ("d", "delete_selected", "Delete"),
+        ("ctrl+p", "command_palette", "Palette"),
+        ("q", "quit", "Quit"),
+    ]
 
     def __init__(self, orchestrator: Orchestrator, **kwargs) -> None:
         super().__init__(**kwargs)
+        self.title = "Constellation"
         self.orchestrator = orchestrator
         self._ui_thread: threading.Thread | None = None
         self.orchestrator.subscribe(self._on_orchestrator_event)
@@ -48,7 +55,7 @@ class ConstellationApp(App[None]):
             with Vertical(id="detail-pane"):
                 yield Static("SIGNAL STREAM", classes="title")
                 yield Static("Select a mission node to inspect its causal chain.", id="detail")
-            yield Static("stars  run  orbit  next/flow  search  mcp status", id="commands")
+            yield Static("stars  run  orbit  stop  delete  search  mcp status", id="commands")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -93,9 +100,34 @@ class ConstellationApp(App[None]):
         node = self.orchestrator.get_node(node_id)
         if node is None:
             return
-        lines = [f"[{node.state.upper()}] {node.title}", f"mission: {node.prompt}", "", "SIGNALS"]
+        lines = [
+            f"[{node.state.upper()}] {node.title}",
+            f"id: {node.id}",
+            f"mission: {node.prompt}",
+            "",
+            "KEYS: s stop  d delete  ctrl+p palette",
+            "",
+            "SIGNALS",
+        ]
         lines.extend(f"{event.created_at}  {event.message}" for event in self.orchestrator.events_for(node.id))
         self.query_one("#detail", Static).update("\n".join(lines))
+
+    def _selected_node_id(self) -> str | None:
+        item = self.query_one("#tree", ListView).highlighted_child
+        return item.name if item else None
+
+    def action_stop_selected(self) -> None:
+        node_id = self._selected_node_id()
+        if node_id:
+            self.orchestrator.stop(node_id)
+            self.notify(f"Stopped mission {node_id}")
+
+    def action_delete_selected(self) -> None:
+        node_id = self._selected_node_id()
+        if node_id:
+            self.orchestrator.delete(node_id)
+            self.notify(f"Deleted mission subtree {node_id}")
+            self.refresh_view()
 
     @staticmethod
     def _glyph(node: AgentNode) -> str:

@@ -116,6 +116,28 @@ class Orchestrator:
             raise ValueError(f"Node does not exist: {parent_id}")
         return self.create_node(title, prompt, parent.id)
 
+    def stop(self, node_id: str) -> AgentNode:
+        """Park a mission so it will not be treated as active."""
+        return self.set_state(node_id, "parked", "Mission stopped by user")
+
+    def delete(self, node_id: str) -> None:
+        """Delete a mission and its descendants, including their signals."""
+        with self._lock:
+            if self.get_node(node_id) is None:
+                raise ValueError(f"Node does not exist: {node_id}")
+            ids = [node_id]
+            index = 0
+            while index < len(ids):
+                rows = self._connection.execute(
+                    "SELECT id FROM nodes WHERE parent_id = ?", (ids[index],)
+                ).fetchall()
+                ids.extend(row["id"] for row in rows)
+                index += 1
+            placeholders = ",".join("?" for _ in ids)
+            self._connection.execute(f"DELETE FROM events WHERE node_id IN ({placeholders})", ids)
+            self._connection.execute(f"DELETE FROM nodes WHERE id IN ({placeholders})", ids)
+            self._connection.commit()
+
     def start(self, node_id: str, worker: Callable[[AgentNode], Iterable[str]]) -> threading.Thread:
         """Run a provider callback in the background and stream its messages as events."""
         node = self.set_state(node_id, "running", "Background execution started")

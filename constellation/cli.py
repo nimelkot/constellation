@@ -7,6 +7,7 @@ import os
 import typer
 
 from constellation.core.orchestrator import Orchestrator
+from constellation.core.auth import APIKeyStore
 from constellation.core.demo import demo_worker
 from constellation.tui.app import ConstellationApp
 
@@ -83,6 +84,40 @@ def status() -> None:
         return
     for node in nodes:
         typer.echo(f"{node.id}  {node.state:<12}  {node.title}")
+
+
+@app.command()
+def stop(node_id: str = typer.Argument(..., help="Mission node id to stop.")) -> None:
+    """Stop a mission and park it in the star map."""
+    orchestrator = open_orchestrator()
+    node = orchestrator.stop(node_id)
+    typer.echo(f"Stopped {node.id}: {node.title}")
+
+
+@app.command()
+def delete(
+    node_id: str = typer.Argument(..., help="Mission node id to delete."),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip the confirmation prompt."),
+) -> None:
+    """Delete a mission and all of its sub-missions."""
+    if not yes and not typer.confirm(f"Delete mission subtree {node_id}?"):
+        typer.echo("Delete cancelled.")
+        return
+    open_orchestrator().delete(node_id)
+    typer.echo(f"Deleted mission subtree {node_id}")
+
+
+@app.command("api-key")
+def api_key(
+    action: str = typer.Argument("create"),
+    label: str = typer.Option("default", "--label", help="Label for the new local key."),
+) -> None:
+    """Create a local API key for future provider integrations."""
+    if action != "create":
+        raise typer.BadParameter("Only 'create' is currently supported")
+    token = APIKeyStore().create(label)
+    typer.echo("API key created. Store this value securely; it will not be shown again:")
+    typer.echo(token)
 
 
 @app.command("mcp")
