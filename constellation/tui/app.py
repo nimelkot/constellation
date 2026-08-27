@@ -5,7 +5,6 @@ from __future__ import annotations
 import threading
 
 from textual.app import App, ComposeResult
-from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Footer, Header, Label, ListItem, ListView, Static
@@ -60,7 +59,7 @@ class ConstellationApp(App[None]):
     .title { color: #a69be6; text-style: bold; }
     #detail { height: 1fr; overflow-y: auto; }
     .running { color: #b7a9ff; }
-    .completed { color: #77718f; }
+    .completed { color: #72d6a3; }
     .needs-input { color: #f6c85f; }
     .parked { color: #9892b0; }
     .failed { color: #ff8b7b; }
@@ -70,7 +69,6 @@ class ConstellationApp(App[None]):
         ("r", "refresh", "Refresh"),
         ("s", "stop_selected", "Stop"),
         ("d", "delete_selected", "Delete"),
-        Binding("ctrl+p", "command_palette", "palette"),
         ("q", "quit", "Quit"),
     ]
 

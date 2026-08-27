@@ -63,15 +63,6 @@ def test_ui_receives_live_worker_signals(tmp_path):
             await asyncio.to_thread(thread.join, 2)
             await pilot.pause()
             assert pilot.app.title == "Constellation"
-            assert any(
-                (binding.key if hasattr(binding, "key") else binding[0]) == "ctrl+p"
-                for binding in pilot.app.BINDINGS
-            )
-            assert any(
-                binding.description == "palette"
-                for binding in pilot.app.BINDINGS
-                if hasattr(binding, "description")
-            )
             assert "Background execution completed" in str(pilot.app.query_one("#detail").render())
         orchestrator.close()
 
