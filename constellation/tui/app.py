@@ -91,7 +91,7 @@ class ConstellationApp(App[None]):
             with Vertical(id="detail-pane"):
                 yield Static("SIGNAL STREAM", classes="title")
                 yield Static("Select a mission node to inspect its causal chain.", id="detail")
-                yield Static("p", id="commands")
+                yield Static("palette", id="commands")
         yield Footer()
 
     def on_mount(self) -> None:
