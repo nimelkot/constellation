@@ -63,11 +63,6 @@ def test_ui_receives_live_worker_signals(tmp_path):
             await asyncio.to_thread(thread.join, 2)
             await pilot.pause()
             assert pilot.app.title == "Constellation"
-            await pilot.click("#view-toggle")
-            await pilot.pause()
-            assert pilot.app.query_one("#tree").has_class("constellation-view")
-            await pilot.click(f"#star-{node.id}")
-            await pilot.pause()
             assert node.id in str(pilot.app.query_one("#detail").render())
             assert "Background execution completed" in str(pilot.app.query_one("#detail").render())
         orchestrator.close()

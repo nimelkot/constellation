@@ -54,14 +54,7 @@ class ConstellationApp(App[None]):
     #tree-pane { width: 42%; background: #17152a; border: solid #3c3764; padding: 1; }
     #detail-pane { width: 58%; background: #121124; border: solid #3c3764; padding: 1 2; }
     #tree { height: 1fr; scrollbar-color: #5b5490; }
-    #view-toggle { width: 1fr; margin: 1 0; background: #302b55; color: #ebe8f5; }
     ListItem { padding: 0 1; color: #bcb7d2; }
-    #tree.constellation-view { layout: grid; grid-size: 2; grid-gutter: 1 2; padding: 1; }
-    #tree.constellation-view ListItem { height: 7; layout: vertical; align: center middle; background: #17152a; border: solid #302b55; padding: 1; }
-    #tree.constellation-view ListItem.--highlight { background: #302b55; border: solid #877BCA; }
-    #tree.constellation-view Button { width: 9; height: 2; min-width: 9; padding: 0; color: #b7a9ff; background: transparent; border: none; text-style: bold; }
-    #tree.constellation-view .star-title { color: #ebe8f5; text-align: center; text-style: bold; }
-    #tree.constellation-view .star-summary { color: #aaa4c4; text-align: center; }
     ListItem.--highlight { background: #302b55; color: #ffffff; }
     .title { color: #a69be6; text-style: bold; }
     #detail { height: 1fr; overflow-y: auto; }
@@ -91,7 +84,6 @@ class ConstellationApp(App[None]):
         with Horizontal(id="body"):
             with Vertical(id="tree-pane"):
                 yield Static(id="stats", classes="title")
-                yield Button("✦ Constellation view", id="view-toggle")
                 yield ListView(id="tree")
             with Vertical(id="detail-pane"):
                 yield Static("SIGNAL STREAM", classes="title")
@@ -112,14 +104,6 @@ class ConstellationApp(App[None]):
     def action_refresh(self) -> None:
         self.refresh_view()
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "view-toggle":
-            self.constellation_mode = not getattr(self, "constellation_mode", False)
-            self.refresh_view()
-            return
-        if event.button.id and event.button.id.startswith("star-"):
-            self._show_node(event.button.id.removeprefix("star-"))
-
     def refresh_view(self) -> None:
         nodes = self.orchestrator.list_nodes()
         active = sum(node.state == "running" for node in nodes)
@@ -127,28 +111,10 @@ class ConstellationApp(App[None]):
             f"✦ CONSTELLATION / STAR MAP    active {active}  nodes {len(nodes)}  mcp 0"
         )
         tree = self.query_one("#tree", ListView)
-        constellation_mode = getattr(self, "constellation_mode", False)
-        tree.set_class(constellation_mode, "constellation-view")
-        self.query_one("#view-toggle", Button).label = (
-            "☷ Tree view" if constellation_mode else "✦ Constellation view"
-        )
         selected = tree.index
         tree.clear()
-        if constellation_mode:
-            for node in nodes:
-                summary = " ".join(node.prompt.split()[:6])
-                tree.mount(
-                    ListItem(
-                        Button("✦", id=f"star-{node.id}"),
-                        Static(node.title, classes="star-title"),
-                        Static(summary or node.title, classes="star-summary"),
-                        name=node.id,
-                        classes=node.state,
-                    )
-                )
-        else:
-            for node, prefix in self.orchestrator.tree_lines():
-                tree.mount(ListItem(Label(f"{prefix}{self._glyph(node)} {node.title}"), name=node.id, classes=node.state))
+        for node, prefix in self.orchestrator.tree_lines():
+            tree.mount(ListItem(Label(f"{prefix}{self._glyph(node)} {node.title}"), name=node.id, classes=node.state))
         if tree.children:
             tree.index = min(selected if selected is not None else 0, len(tree.children) - 1)
             self._show_selected()
